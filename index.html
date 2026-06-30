@@ -122,6 +122,58 @@
     transform: scale(1.05);
   }
 
+  /* ===== 4 个时段主题色 ===== */
+  /* 早餐 - 暖橙朝阳 */
+  .chip[data-cat="早餐类"].active,
+  .chip[data-time="morning"] {
+    background: linear-gradient(135deg, #ff9966, #ff5e62);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(255, 153, 102, 0.5);
+  }
+  .chip[data-cat="早餐类"].active { transform: scale(1.05); }
+
+  /* 午餐 - 清新绿 */
+  .chip[data-cat="午餐类"].active,
+  .chip[data-time="noon"] {
+    background: linear-gradient(135deg, #56ab2f, #a8e063);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(86, 171, 47, 0.5);
+  }
+  .chip[data-cat="午餐类"].active { transform: scale(1.05); }
+
+  /* 晚餐 - 暖红晚霞 */
+  .chip[data-cat="晚餐类"].active,
+  .chip[data-time="evening"] {
+    background: linear-gradient(135deg, #ed213a, #93291e);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(237, 33, 58, 0.5);
+  }
+  .chip[data-cat="晚餐类"].active { transform: scale(1.05); }
+
+  /* 夜宵 - 深紫星空 */
+  .chip[data-cat="夜宵类"].active,
+  .chip[data-time="night"] {
+    background: linear-gradient(135deg, #2c3e50, #4ca1af);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(76, 161, 175, 0.5);
+  }
+  .chip[data-cat="夜宵类"].active { transform: scale(1.05); }
+
+  /* 时段模式下的主背景也跟随渐变 */
+  body.mode-morning { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); }
+  body.mode-noon    { background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%); }
+  body.mode-evening { background: linear-gradient(135deg, #f6d365 0%, #fda085 50%, #ff6e7f 100%); }
+  body.mode-night   { background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%); }
+  body.mode-night h1,
+  body.mode-night .subtitle,
+  body.mode-night .filter-label,
+  body.mode-night .counter { color: rgba(255,255,255,0.95); text-shadow: 0 1px 6px rgba(0,0,0,0.4); }
+  body.mode-night .display { background: rgba(20, 30, 40, 0.92); color: #fff; }
+  body.mode-night .store-name { color: #ffd1ff; }
+  body.mode-night .store-category { background: linear-gradient(135deg, #4ca1af, #2c3e50); color: #fff; }
+  body.mode-night .placeholder { color: rgba(255,255,255,0.4); }
+  body.mode-night .placeholder .text { color: rgba(255,255,255,0.7); }
+
   /* ===== 主显示卡 ===== */
   .display {
     width: 100%;
@@ -369,9 +421,20 @@
     }
   }
 
-  // ====== 工具函数 ======
+  // 工具函数
   const $ = (s) => document.querySelector(s);
   const $$ = (s) => document.querySelectorAll(s);
+
+  // ====== 智能识别当前时段（根据系统时间） ======
+  function getCurrentTimeSlot() {
+    const h = new Date().getHours();
+    if (h >= 5  && h < 11) return { key: '早餐类', mode: 'morning', emoji: '🌅' };
+    if (h >= 11 && h < 14) return { key: '午餐类', mode: 'noon',    emoji: '🌞' };
+    if (h >= 14 && h < 17) return { key: '午餐类', mode: 'noon',    emoji: '🌞' };  // 下午茶也算午餐类
+    if (h >= 17 && h < 22) return { key: '晚餐类', mode: 'evening', emoji: '🌙' };
+    return { key: '夜宵类', mode: 'night', emoji: '🌃' };  // 22-5 点
+  }
+  const TIME_SLOT = getCurrentTimeSlot();
 
   // 总数和分类（动态算，因为 dishes 是异步加载的）
   function getStats() {
@@ -406,7 +469,13 @@
       chip.addEventListener('click', () => {
         container.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
-        selectedCategory = chip.dataset.cat || null;
+        const cat = chip.dataset.cat;
+        selectedCategory = cat || null;
+        // 切换"全部"chip 和具体分类的样式
+        if (!cat) {
+          chip.style.background = 'var(--primary)';
+          chip.style.boxShadow = '0 3px 10px rgba(255,107,107,0.4)';
+        }
         // 重置显示
         if (!isRunning) reset();
       });
@@ -454,9 +523,9 @@
     $("#display").classList.remove('spinning');
     $("#displayContent").innerHTML = `
       <div class="placeholder">
-        <span class="emoji">🍽️</span>
-        <div class="text">准备好吃啥了吗？</div>
-        <div class="hint">${selectedCategory ? '当前分类：' + selectedCategory : '点"开始"让美食转起来'}</div>
+        <span class="emoji">${TIME_SLOT.emoji}</span>
+        <div class="text">${selectedCategory ? '当前分类：' + selectedCategory : '全部时段'}</div>
+        <div class="hint">点"开始"让美食转起来</div>
       </div>
     `;
     $("#rerollBtn").style.display = 'none';
@@ -575,9 +644,22 @@
     await loadDishes();
     const { cats, total } = getStats();
     CATEGORIES = cats;
+
+    // 智能识别时段 → 默认选中 + 应用主题
+    if (cats.includes(TIME_SLOT.key)) {
+      selectedCategory = TIME_SLOT.key;
+    }
+    document.body.classList.add('mode-' + TIME_SLOT.mode);
+
     renderChips();
+    // 标记当前选中的 chip
+    if (selectedCategory) {
+      document.querySelectorAll('.chip').forEach(c => {
+        if (c.dataset.cat === selectedCategory) c.classList.add('active');
+      });
+    }
     renderHistory();
-    $("#counter").textContent = `📊 共 ${total} 道菜 · ${cats.length} 个分类`;
+    $("#counter").textContent = `📊 共 ${total} 道菜 · ${cats.length} 个分类 · 当前时段：${TIME_SLOT.emoji} ${TIME_SLOT.key}`;
     startFloating();
   })();
 </script>
