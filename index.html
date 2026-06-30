@@ -93,50 +93,231 @@
     user-select: none;
   }
 
-  /* 时间胶囊（独立成行，更醒目） */
+  /* 时间胶囊（独立成行，更醒目） - 美化版 */
   .clock {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
-    padding: 8px 18px 8px 12px;
-    background: rgba(255,255,255,0.28);
-    border-radius: 22px;
-    font-family: "SF Mono", "Menlo", "Monaco", monospace;
+    gap: 12px;
+    padding: 14px 24px 14px 16px;
+    background: linear-gradient(135deg,
+      rgba(255,255,255,0.22) 0%,
+      rgba(255,255,255,0.15) 50%,
+      rgba(255,255,255,0.22) 100%);
+    border-radius: 24px;
     color: #fff;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.25);
-    backdrop-filter: blur(10px) saturate(180%);
-    -webkit-backdrop-filter: blur(10px) saturate(180%);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-    transition: all 0.3s;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.35);
+    backdrop-filter: blur(14px) saturate(180%);
+    -webkit-backdrop-filter: blur(14px) saturate(180%);
+    box-shadow:
+      0 8px 32px rgba(0,0,0,0.22),
+      inset 0 1px 1px rgba(255,255,255,0.4),
+      inset 0 -1px 1px rgba(0,0,0,0.1);
+    border: 1px solid rgba(255,255,255,0.25);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  /* 玻璃高光 */
+  .clock::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 50%;
+    background: linear-gradient(to bottom,
+      rgba(255,255,255,0.3) 0%,
+      rgba(255,255,255,0) 100%);
+    pointer-events: none;
   }
   .clock:hover {
-    transform: scale(1.04);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.22);
+    transform: scale(1.04) translateY(-2px);
+    box-shadow:
+      0 12px 40px rgba(0,0,0,0.28),
+      inset 0 1px 1px rgba(255,255,255,0.5);
   }
   .clock .clock-icon {
-    font-size: 20px;
-    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+    font-size: 22px;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.4));
+    animation: clock-icon-bounce 1s ease-in-out infinite;
+  }
+  @keyframes clock-icon-bounce {
+    0%, 100% { transform: scale(1) rotate(0); }
+    50%      { transform: scale(1.08) rotate(-3deg); }
   }
   .clock .clock-time {
-    font-size: 22px;
-    font-weight: 700;
+    font-size: 28px;
+    font-weight: 800;
     letter-spacing: 1.5px;
     font-variant-numeric: tabular-nums;
     line-height: 1;
+    background: linear-gradient(to bottom,
+      #ffffff 0%,
+      #f0f0f0 50%,
+      #ffffff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: none;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));
+  }
+  .clock .clock-colon {
+    display: inline-block;
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1;
+    margin: 0 -2px;
+    animation: clock-blink 1s steps(2, end) infinite;
+  }
+  @keyframes clock-blink {
+    0%, 50%   { opacity: 1; }
+    50.01%, 100% { opacity: 0.35; }
   }
   .clock .clock-secs {
-    font-size: 14px;
-    opacity: 0.75;
-    font-weight: 500;
-    margin-left: 1px;
+    font-size: 16px;
+    opacity: 0.8;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    font-variant-numeric: tabular-nums;
+    margin-left: 2px;
   }
   .clock .clock-pulse {
-    width: 9px;
-    height: 9px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
-    background: #ff4757;
-    box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7);
+    background: radial-gradient(circle, #ff4757 30%, #c0392b 100%);
+    box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.8);
     animation: clock-pulse 1.5s ease-out infinite;
+  }
+  @keyframes clock-pulse {
+    0%   {
+      box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.8);
+      transform: scale(1);
+    }
+    70%  {
+      box-shadow: 0 0 0 10px rgba(255, 71, 87, 0);
+      transform: scale(1.1);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(255, 71, 87, 0);
+      transform: scale(1);
+    }
+  }
+
+  /* ===== 信息条 widget：日期 / 星期 / 天气（独立成行，毛玻璃卡片） ===== */
+  .info-bar {
+    display: inline-flex;
+    align-items: stretch;
+    gap: 0;
+    margin-top: 4px;
+    padding: 0;
+    background: rgba(255,255,255,0.18);
+    backdrop-filter: blur(14px) saturate(180%);
+    -webkit-backdrop-filter: blur(14px) saturate(180%);
+    border-radius: 18px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.25);
+  }
+  .info-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    position: relative;
+    transition: background 0.3s;
+  }
+  .info-cell:hover { background: rgba(255,255,255,0.15); }
+  .info-cell + .info-cell { border-left: 1px solid rgba(255,255,255,0.25); }
+
+  /* 日期 */
+  .info-date .info-icon {
+    font-size: 18px;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+  }
+  .info-date .info-main {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: 0.5px;
+  }
+  .info-date .info-sub {
+    font-size: 10px;
+    opacity: 0.8;
+    margin-top: 1px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* 星期 */
+  .info-week .info-icon {
+    font-size: 18px;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+  }
+  .info-week .info-main {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+  .info-week .info-sub {
+    font-size: 10px;
+    opacity: 0.8;
+    margin-top: 1px;
+  }
+  /* 周末高亮 */
+  .info-week.is-weekend .info-main { color: #ffd1ff; }
+
+  /* 天气 */
+  .info-weather .info-icon {
+    font-size: 22px;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+    display: inline-block;
+  }
+  .info-weather .info-main {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+  .info-weather .info-sub {
+    font-size: 10px;
+    opacity: 0.8;
+    margin-top: 1px;
+  }
+
+  /* 天气图标动画 */
+  .info-weather .info-icon.sun    { animation: spin 12s linear infinite; }
+  .info-weather .info-icon.cloud  { animation: drift 6s ease-in-out infinite; }
+  .info-weather .info-icon.rain   { animation: drop 1.2s ease-in infinite; }
+  .info-weather .info-icon.snow   { animation: fall 4s linear infinite; }
+  .info-weather .info-icon.thunder{ animation: flash 2s ease-in-out infinite; }
+  .info-weather .info-icon.fog    { animation: drift 5s ease-in-out infinite; }
+
+  @keyframes spin {
+    100% { transform: rotate(360deg); }
+  }
+  @keyframes drift {
+    0%, 100% { transform: translateX(0); }
+    50%      { transform: translateX(4px); }
+  }
+  @keyframes drop {
+    0%   { transform: translateY(0) rotate(0); }
+    50%  { transform: translateY(4px) rotate(-10deg); }
+    100% { transform: translateY(0) rotate(0); }
+  }
+  @keyframes fall {
+    0%   { transform: translateY(-2px) rotate(0); }
+    100% { transform: translateY(2px) rotate(360deg); }
+  }
+  @keyframes flash {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.4; transform: scale(0.85); }
+  }
+
+  /* 响应式：窄屏时信息条垂直堆叠 */
+  @media (max-width: 480px) {
+    .info-bar { flex-direction: column; }
+    .info-cell + .info-cell { border-left: none; border-top: 1px solid rgba(255,255,255,0.25); }
+    .info-cell { padding: 8px 14px; }
   }
   @keyframes clock-pulse {
     0%   { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7); }
@@ -471,8 +652,32 @@
     <div class="clock" id="clock">
       <span class="clock-pulse"></span>
       <span class="clock-icon" id="clockIcon">🕐</span>
-      <span class="clock-time" id="clockTime">--:--</span>
-      <span class="clock-secs" id="clockSecs">:--</span>
+      <span class="clock-time" id="clockTime">--<span class="clock-colon">:</span>--</span>
+      <span class="clock-secs" id="clockSecs">.--</span>
+    </div>
+    <!-- 信息条：日期 / 星期 / 天气 -->
+    <div class="info-bar">
+      <div class="info-cell info-date">
+        <span class="info-icon" id="dateIcon">📅</span>
+        <div>
+          <div class="info-main" id="dateMain">--月--日</div>
+          <div class="info-sub" id="dateSub">--</div>
+        </div>
+      </div>
+      <div class="info-cell info-week" id="weekCell">
+        <span class="info-icon" id="weekIcon">📆</span>
+        <div>
+          <div class="info-main" id="weekMain">--</div>
+          <div class="info-sub" id="weekSub">第 -- 周</div>
+        </div>
+      </div>
+      <div class="info-cell info-weather" id="weatherCell">
+        <span class="info-icon" id="weatherIcon">☀️</span>
+        <div>
+          <div class="info-main" id="weatherMain">--</div>
+          <div class="info-sub" id="weatherSub">-- · --</div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -763,24 +968,101 @@
     const h = now.getHours();
     const m = now.getMinutes();
     const s = now.getSeconds();
+    const main = `${pad(h)}<span class="clock-colon">:</span>${pad(m)}`;
     const sec = pad(s);
-    const main = pad(h) + ':' + pad(m);
 
     const timeEl = $("#clockTime");
     const secsEl = $("#clockSecs");
     const iconEl = $("#clockIcon");
 
     if (lastSecond !== s) {
-      if (timeEl && timeEl.textContent !== main) {
-        timeEl.textContent = main;
-        timeEl.classList.remove('tick');
-        void timeEl.offsetWidth;
-        timeEl.classList.add('tick');
+      if (timeEl && timeEl.innerHTML.replace(/<[^>]+>/g, '') !== main.replace(/<[^>]+>/g, '')) {
+        timeEl.innerHTML = main;
       }
-      if (secsEl) secsEl.textContent = ':' + sec;
+      if (secsEl) secsEl.textContent = '.' + sec;
       if (iconEl) iconEl.textContent = getTimeIcon(h);
       lastSecond = s;
     }
+  }
+
+  // ====== 日期 / 星期 / 天气（一次性填充，日期每天变所以每天刷一次） ======
+  const WEEKDAY_FULL = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+  const SEASON_TIPS = {
+    1:  { season: '寒冬', tip: '注意保暖' },
+    2:  { season: '初春', tip: '乍暖还寒' },
+    3:  { season: '仲春', tip: '春暖花开' },
+    4:  { season: '暮春', tip: '春意盎然' },
+    5:  { season: '初夏', tip: '阳光正好' },
+    6:  { season: '盛夏', tip: '防暑降温' },
+    7:  { season: '酷夏', tip: '多喝水' },
+    8:  { season: '初秋', tip: '秋高气爽' },
+    9:  { season: '仲秋', tip: '丹桂飘香' },
+    10: { season: '深秋', tip: '添衣保暖' },
+    11: { season: '初冬', tip: '天冷加衣' },
+    12: { season: '隆冬', tip: '注意保暖' },
+  };
+  // 简单"模拟"天气（按月份 + 随机种子，让每天有不同天气）
+  const WEATHER_POOL = [
+    { icon: '☀️', name: '晴',   class: 'sun',     temps: [22, 32] },
+    { icon: '⛅', name: '多云', class: 'cloud',   temps: [18, 28] },
+    { icon: '☁️', name: '阴',   class: 'cloud',   temps: [15, 24] },
+    { icon: '🌧️', name: '小雨', class: 'rain',    temps: [12, 20] },
+    { icon: '⛈️', name: '雷阵雨', class: 'thunder', temps: [16, 26] },
+    { icon: '🌫️', name: '雾',   class: 'fog',     temps: [10, 18] },
+    { icon: '❄️', name: '小雪', class: 'snow',    temps: [-5, 3] },
+    { icon: '🌨️', name: '雨夹雪', class: 'snow',   temps: [-2, 5] },
+  ];
+  function getDayOfYear(d) {
+    const start = new Date(d.getFullYear(), 0, 0);
+    const diff = d - start;
+    return Math.floor(diff / (1000 * 60 * 60 * 24));
+  }
+  function getWeather(now) {
+    // 用 dayOfYear 做种子，同一天看到的天气一样
+    const doy = getDayOfYear(now);
+    const idx = doy % WEATHER_POOL.length;
+    const w = WEATHER_POOL[idx];
+    // 温度 = 基础 + 月份调整 + 随机扰动
+    const month = now.getMonth() + 1;
+    const seasonal = month >= 6 && month <= 8 ? 5 : (month <= 2 || month >= 12 ? -8 : 0);
+    const lo = w.temps[0] + seasonal;
+    const hi = w.temps[1] + seasonal;
+    return { ...w, temp: `${lo}°~${hi}°` };
+  }
+  function getWeekOfYear(d) {
+    const onejan = new Date(d.getFullYear(), 0, 1);
+    return Math.ceil((((d - onejan) / 86400000) + onejan.getDay() + 1) / 7);
+  }
+  function updateInfoBar() {
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const date  = now.getDate();
+    const weekday = now.getDay();
+    const season = SEASON_TIPS[month];
+
+    // 日期
+    $("#dateMain").textContent = `${month}月${date}日`;
+    $("#dateSub").textContent = `${now.getFullYear()} · ${season.season} · ${season.tip}`;
+
+    // 星期
+    $("#weekMain").textContent = WEEKDAY_FULL[weekday];
+    $("#weekSub").textContent = `第 ${getWeekOfYear(now)} 周 · ${now.getFullYear()}`;
+    const weekCell = $("#weekCell");
+    if (weekday === 0 || weekday === 6) {
+      weekCell.classList.add('is-weekend');
+    } else {
+      weekCell.classList.remove('is-weekend');
+    }
+    // 周末换 icon
+    $("#weekIcon").textContent = (weekday === 0 || weekday === 6) ? '🎉' : '📆';
+
+    // 天气
+    const w = getWeather(now);
+    const wIcon = $("#weatherIcon");
+    wIcon.className = 'info-icon ' + w.class;  // 触发动画
+    wIcon.textContent = w.icon;
+    $("#weatherMain").textContent = w.name;
+    $("#weatherSub").textContent = `${w.temp} · ${season.season}`;
   }
 
   // ====== 初始化（等数据加载完） ======
@@ -812,6 +1094,11 @@
     // 启动时钟（每 200ms 检查一次，翻转动效用）
     updateClock();
     setInterval(updateClock, 200);
+
+    // 填充信息条（日期/星期/天气）
+    updateInfoBar();
+    // 每分钟检查一次（天气每天变，日期自然变；这里 1 分钟也够）
+    setInterval(updateInfoBar, 60 * 1000);
   })();
 </script>
 </body>
