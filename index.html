@@ -58,6 +58,102 @@
     z-index: 2;
     position: relative;
   }
+
+  /* ===== 顶栏两行布局：上行 菜品数 / 分类数 / 时段，下行 时间胶囊 ===== */
+  .top-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .top-bar-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .top-bar .stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 18px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.95);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .top-bar .stat-divider {
+    color: rgba(255,255,255,0.5);
+    font-size: 10px;
+    user-select: none;
+  }
+
+  /* 时间胶囊（独立成行，更醒目） */
+  .clock {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 18px 8px 12px;
+    background: rgba(255,255,255,0.28);
+    border-radius: 22px;
+    font-family: "SF Mono", "Menlo", "Monaco", monospace;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    backdrop-filter: blur(10px) saturate(180%);
+    -webkit-backdrop-filter: blur(10px) saturate(180%);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    transition: all 0.3s;
+  }
+  .clock:hover {
+    transform: scale(1.04);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.22);
+  }
+  .clock .clock-icon {
+    font-size: 20px;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+  }
+  .clock .clock-time {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .clock .clock-secs {
+    font-size: 14px;
+    opacity: 0.75;
+    font-weight: 500;
+    margin-left: 1px;
+  }
+  .clock .clock-pulse {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #ff4757;
+    box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7);
+    animation: clock-pulse 1.5s ease-out infinite;
+  }
+  @keyframes clock-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7); }
+    70%  { box-shadow: 0 0 0 8px rgba(255, 71, 87, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); }
+  }
+  @keyframes clock-flip {
+    0%   { transform: rotateX(0deg); }
+    50%  { transform: rotateX(90deg); opacity: 0.3; }
+    100% { transform: rotateX(0deg); }
+  }
+  .clock .clock-time.tick {
+    animation: clock-flip 0.4s ease-in-out;
+  }
+
+  /* 顶部旧 counter 留作兼容，但实际显示被 top-bar 替代 */
+  .counter { display: none; }
   h1 {
     font-size: 30px;
     font-weight: 800;
@@ -366,7 +462,19 @@
 <div class="header">
   <h1>🍜 杨凌吃啥 · 美食抽签 🎲</h1>
   <div class="subtitle">纠结吃啥？让缘分决定！</div>
-  <div class="counter" id="counter">📊 共 220 道菜 · 14 个分类</div>
+  <div class="top-bar">
+    <div class="top-bar-row">
+      <div class="stat" id="statDishes">📊 <span id="dishCount">--</span> 道菜</div>
+      <div class="stat" id="statCats">🗂 <span id="catCount">--</span> 个分类</div>
+      <div class="stat" id="statSlot">⏰ <span id="slotText">--</span></div>
+    </div>
+    <div class="clock" id="clock">
+      <span class="clock-pulse"></span>
+      <span class="clock-icon" id="clockIcon">🕐</span>
+      <span class="clock-time" id="clockTime">--:--</span>
+      <span class="clock-secs" id="clockSecs">:--</span>
+    </div>
+  </div>
 </div>
 
 <!-- 分类筛选 -->
@@ -639,6 +747,42 @@
     setInterval(spawn, 2500);
   }
 
+  // ====== 时间胶囊（实时更新） ======
+  function getTimeIcon(h) {
+    if (h >= 5  && h < 11) return '🌅';   // 早餐
+    if (h >= 11 && h < 14) return '🌞';   // 午餐
+    if (h >= 14 && h < 17) return '☕';   // 下午茶
+    if (h >= 17 && h < 19) return '🌇';   // 黄昏
+    if (h >= 19 && h < 22) return '🌙';   // 晚餐
+    return '🌃';                            // 夜宵
+  }
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  let lastSecond = -1;
+  function updateClock() {
+    const now = new Date();
+    const h = now.getHours();
+    const m = now.getMinutes();
+    const s = now.getSeconds();
+    const sec = pad(s);
+    const main = pad(h) + ':' + pad(m);
+
+    const timeEl = $("#clockTime");
+    const secsEl = $("#clockSecs");
+    const iconEl = $("#clockIcon");
+
+    if (lastSecond !== s) {
+      if (timeEl && timeEl.textContent !== main) {
+        timeEl.textContent = main;
+        timeEl.classList.remove('tick');
+        void timeEl.offsetWidth;
+        timeEl.classList.add('tick');
+      }
+      if (secsEl) secsEl.textContent = ':' + sec;
+      if (iconEl) iconEl.textContent = getTimeIcon(h);
+      lastSecond = s;
+    }
+  }
+
   // ====== 初始化（等数据加载完） ======
   (async () => {
     await loadDishes();
@@ -659,8 +803,15 @@
       });
     }
     renderHistory();
-    $("#counter").textContent = `📊 共 ${total} 道菜 · ${cats.length} 个分类 · 当前时段：${TIME_SLOT.emoji} ${TIME_SLOT.key}`;
+    // 顶栏三段式：菜品数 ⏰ 时钟 🗂 分类数 ⏰ 时段
+    $("#dishCount").textContent = total;
+    $("#catCount").textContent = cats.length;
+    $("#slotText").textContent = `${TIME_SLOT.emoji} ${TIME_SLOT.key}`;
     startFloating();
+
+    // 启动时钟（每 200ms 检查一次，翻转动效用）
+    updateClock();
+    setInterval(updateClock, 200);
   })();
 </script>
 </body>
