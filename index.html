@@ -34,22 +34,7 @@
     position: relative;
   }
 
-  /* ===== 飘落的食物 emoji 背景 ===== */
-  .floating-emoji {
-    position: fixed;
-    top: -50px;
-    font-size: 28px;
-    opacity: 0.35;
-    pointer-events: none;
-    animation: fall linear infinite;
-    z-index: 0;
-  }
-  @keyframes fall {
-    0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
-    10%  { opacity: 0.35; }
-    90%  { opacity: 0.35; }
-    100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
-  }
+  /* 食物 emoji 飘花已移除（老爹要求） */
 
   /* ===== 顶部标题 ===== */
   .header {
@@ -1066,39 +1051,49 @@
   }
 
   // ====== 初始化（等数据加载完） ======
+  // 飘花 emoji 先启动（独立于数据加载，永远要飘）
+  startFloating();
+
   (async () => {
-    await loadDishes();
-    const { cats, total } = getStats();
-    CATEGORIES = cats;
+    try {
+      await loadDishes();
+      const { cats, total } = getStats();
+      CATEGORIES = cats;
 
-    // 智能识别时段 → 默认选中 + 应用主题
-    if (cats.includes(TIME_SLOT.key)) {
-      selectedCategory = TIME_SLOT.key;
+      // 智能识别时段 → 默认选中 + 应用主题
+      if (cats.includes(TIME_SLOT.key)) {
+        selectedCategory = TIME_SLOT.key;
+      }
+      document.body.classList.add('mode-' + TIME_SLOT.mode);
+
+      renderChips();
+      // 标记当前选中的 chip
+      if (selectedCategory) {
+        document.querySelectorAll('.chip').forEach(c => {
+          if (c.dataset.cat === selectedCategory) c.classList.add('active');
+        });
+      }
+      renderHistory();
+      // 顶栏三段式：菜品数 ⏰ 时钟 🗂 分类数 ⏰ 时段
+      $("#dishCount").textContent = total;
+      $("#catCount").textContent = cats.length;
+      $("#slotText").textContent = `${TIME_SLOT.emoji} ${TIME_SLOT.key}`;
+
+      // 启动时钟（每 200ms 检查一次，翻转动效用）
+      updateClock();
+      setInterval(updateClock, 200);
+
+      // 填充信息条（日期/星期/天气）
+      updateInfoBar();
+      // 每分钟检查一次（天气每天变，日期自然变；这里 1 分钟也够）
+      setInterval(updateInfoBar, 60 * 1000);
+    } catch (e) {
+      console.error('❌ 初始化失败:', e);
+      // 加载失败时也要把基础时间信息显示出来
+      updateClock();
+      setInterval(updateClock, 200);
+      updateInfoBar();
     }
-    document.body.classList.add('mode-' + TIME_SLOT.mode);
-
-    renderChips();
-    // 标记当前选中的 chip
-    if (selectedCategory) {
-      document.querySelectorAll('.chip').forEach(c => {
-        if (c.dataset.cat === selectedCategory) c.classList.add('active');
-      });
-    }
-    renderHistory();
-    // 顶栏三段式：菜品数 ⏰ 时钟 🗂 分类数 ⏰ 时段
-    $("#dishCount").textContent = total;
-    $("#catCount").textContent = cats.length;
-    $("#slotText").textContent = `${TIME_SLOT.emoji} ${TIME_SLOT.key}`;
-    startFloating();
-
-    // 启动时钟（每 200ms 检查一次，翻转动效用）
-    updateClock();
-    setInterval(updateClock, 200);
-
-    // 填充信息条（日期/星期/天气）
-    updateInfoBar();
-    // 每分钟检查一次（天气每天变，日期自然变；这里 1 分钟也够）
-    setInterval(updateInfoBar, 60 * 1000);
   })();
 </script>
 </body>
