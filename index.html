@@ -3,189 +3,512 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>杨凌吃哪家 🎲</title>
+<title>🍜 杨凌吃啥 · 美食抽签 🎲</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
+  :root {
+    --primary: #ff6b6b;
+    --secondary: #ff8e53;
+    --bg-1: #ff9a9e;
+    --bg-2: #fad0c4;
+    --bg-3: #ffd1ff;
+    --card-bg: rgba(255, 255, 255, 0.96);
+    --text-main: #2d3436;
+    --text-sub: #636e72;
+  }
+
+  html, body { height: 100%; }
+
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
-    background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 50%, #ffd1ff 100%);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+    background: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 50%, var(--bg-3) 100%);
+    background-attachment: fixed;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: 20px;
-    overflow: hidden;
+    padding: 24px 16px 32px;
+    overflow-x: hidden;
     user-select: none;
-  }
-
-  h1 {
-    font-size: 28px;
-    color: #fff;
-    text-shadow: 2px 2px 8px rgba(0,0,0,0.2);
-    margin-bottom: 8px;
-    text-align: center;
-  }
-
-  .subtitle {
-    font-size: 14px;
-    color: #fff;
-    opacity: 0.9;
-    margin-bottom: 30px;
-    text-align: center;
-  }
-
-  .display {
-    width: 90%;
-    max-width: 400px;
-    height: 280px;
-    background: rgba(255,255,255,0.95);
-    border-radius: 24px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 30px;
-    margin-bottom: 40px;
-    overflow: hidden;
     position: relative;
   }
 
+  /* ===== 飘落的食物 emoji 背景 ===== */
+  .floating-emoji {
+    position: fixed;
+    top: -50px;
+    font-size: 28px;
+    opacity: 0.35;
+    pointer-events: none;
+    animation: fall linear infinite;
+    z-index: 0;
+  }
+  @keyframes fall {
+    0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+    10%  { opacity: 0.35; }
+    90%  { opacity: 0.35; }
+    100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+  }
+
+  /* ===== 顶部标题 ===== */
+  .header {
+    text-align: center;
+    margin-bottom: 16px;
+    z-index: 2;
+    position: relative;
+  }
+  h1 {
+    font-size: 30px;
+    font-weight: 800;
+    color: #fff;
+    text-shadow: 0 3px 12px rgba(0,0,0,0.25);
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: rgba(255,255,255,0.95);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+  .counter {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 3px 12px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 20px;
+    font-size: 12px;
+    color: #fff;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  /* ===== 分类筛选 ===== */
+  .filter-bar {
+    width: 100%;
+    max-width: 420px;
+    margin-bottom: 14px;
+    z-index: 2;
+    position: relative;
+  }
+  .filter-label {
+    font-size: 12px;
+    color: rgba(255,255,255,0.9);
+    margin-bottom: 6px;
+    padding-left: 4px;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .chip {
+    padding: 6px 12px;
+    background: rgba(255,255,255,0.85);
+    border: none;
+    border-radius: 16px;
+    font-size: 12px;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .chip.active {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 3px 10px rgba(255,107,107,0.4);
+    transform: scale(1.05);
+  }
+
+  /* ===== 主显示卡 ===== */
+  .display {
+    width: 100%;
+    max-width: 420px;
+    min-height: 220px;
+    background: var(--card-bg);
+    border-radius: 28px;
+    box-shadow:
+      0 15px 50px rgba(0,0,0,0.18),
+      inset 0 1px 0 rgba(255,255,255,0.8);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 28px 24px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+    z-index: 2;
+  }
+  .display::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(from 0deg, transparent 0deg, rgba(255,107,107,0.08) 90deg, transparent 180deg);
+    animation: rotate 8s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes rotate {
+    100% { transform: rotate(360deg); }
+  }
+  .display-content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+  }
   .store-name {
-    font-size: 32px;
-    font-weight: bold;
-    color: #ff6b6b;
-    text-align: center;
+    font-size: 34px;
+    font-weight: 800;
+    color: var(--primary);
+    line-height: 1.3;
     word-break: break-all;
-    line-height: 1.4;
+    margin-bottom: 8px;
   }
-
+  .store-category {
+    display: inline-block;
+    padding: 4px 12px;
+    background: linear-gradient(135deg, #ffecd2, #fcb69f);
+    border-radius: 14px;
+    font-size: 12px;
+    color: #8b4513;
+    font-weight: 600;
+    margin-top: 4px;
+  }
   .placeholder {
-    font-size: 18px;
-    color: #999;
     text-align: center;
+    color: #b2bec3;
+  }
+  .placeholder .emoji { font-size: 56px; display: block; margin-bottom: 12px; }
+  .placeholder .text { font-size: 16px; font-weight: 500; }
+  .placeholder .hint { font-size: 12px; margin-top: 6px; opacity: 0.7; }
+
+  /* 摇动效果 */
+  .display.spinning {
+    animation: shake 0.1s linear infinite;
+  }
+  @keyframes shake {
+    0%   { transform: translate(0, 0) rotate(0); }
+    25%  { transform: translate(-2px, 1px) rotate(-0.5deg); }
+    50%  { transform: translate(2px, -1px) rotate(0.5deg); }
+    75%  { transform: translate(-1px, 2px) rotate(-0.3deg); }
+    100% { transform: translate(1px, -2px) rotate(0.3deg); }
   }
 
-  .placeholder .emoji { font-size: 48px; display: block; margin-bottom: 12px; }
-
+  /* ===== 按钮组 ===== */
   .buttons {
     display: flex;
-    gap: 20px;
-    width: 90%;
-    max-width: 400px;
+    gap: 14px;
+    width: 100%;
+    max-width: 420px;
+    margin-bottom: 16px;
+    z-index: 2;
+    position: relative;
   }
-
   button {
     flex: 1;
-    padding: 18px 0;
-    font-size: 18px;
-    font-weight: bold;
+    padding: 16px 0;
+    font-size: 17px;
+    font-weight: 700;
     border: none;
     border-radius: 50px;
     cursor: pointer;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.18);
     transition: transform 0.1s, box-shadow 0.1s;
     color: #fff;
+    letter-spacing: 1px;
   }
-
-  button:active { transform: scale(0.96); box-shadow: 0 3px 10px rgba(0,0,0,0.15); }
-
-  button:disabled { opacity: 0.5; cursor: not-allowed; }
-
+  button:active { transform: scale(0.95); box-shadow: 0 3px 10px rgba(0,0,0,0.18); }
+  button:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; }
   #startBtn { background: linear-gradient(135deg, #11998e, #38ef7d); }
   #stopBtn  { background: linear-gradient(135deg, #eb3349, #f45c43); }
-
-  .footer {
-    margin-top: 30px;
-    font-size: 12px;
-    color: rgba(255,255,255,0.8);
-    text-align: center;
+  #rerollBtn {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    margin-bottom: 16px;
   }
 
+  /* ===== 历史记录 ===== */
+  .history {
+    width: 100%;
+    max-width: 420px;
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.85);
+    border-radius: 18px;
+    z-index: 2;
+    position: relative;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .history-title {
+    font-size: 12px;
+    color: var(--text-sub);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .history-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-height: 32px;
+  }
+  .history-item {
+    padding: 4px 10px;
+    background: linear-gradient(135deg, #ffeaa7, #fab1a0);
+    border-radius: 12px;
+    font-size: 12px;
+    color: #6c5ce7;
+    font-weight: 600;
+    animation: pop 0.3s ease-out;
+  }
+  .history-empty {
+    font-size: 12px;
+    color: #b2bec3;
+    font-style: italic;
+  }
+
+  /* ===== 弹出动画 ===== */
   @keyframes pop {
-    0%   { transform: scale(0.5); opacity: 0; }
-    50%  { transform: scale(1.15); }
+    0%   { transform: scale(0.3); opacity: 0; }
+    50%  { transform: scale(1.2); }
     100% { transform: scale(1); opacity: 1; }
   }
-  .pop { animation: pop 0.4s ease-out; }
+  .pop { animation: pop 0.5s ease-out; }
+
+  /* ===== 礼花效果 ===== */
+  .confetti {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 10px;
+    height: 10px;
+    pointer-events: none;
+    z-index: 100;
+    border-radius: 2px;
+    animation: confetti-burst 1.2s ease-out forwards;
+  }
+  @keyframes confetti-burst {
+    0%   { transform: translate(0, 0) scale(0); opacity: 1; }
+    100% { transform: translate(var(--dx), var(--dy)) scale(1) rotate(720deg); opacity: 0; }
+  }
+
+  /* ===== 响应式 ===== */
+  @media (max-width: 360px) {
+    h1 { font-size: 24px; }
+    .store-name { font-size: 28px; }
+    button { font-size: 15px; padding: 14px 0; }
+  }
 </style>
 </head>
 <body>
-  <h1>🍜 杨凌吃哪家 🎲</h1>
-  <div class="subtitle">点开始疯狂转，点击结束看缘分</div>
 
-  <div class="display" id="display">
-    <div class="placeholder" id="placeholder">
+<!-- 背景飘落的食物 emoji -->
+<div id="emojiContainer"></div>
+
+<!-- 标题 -->
+<div class="header">
+  <h1>🍜 杨凌吃啥 · 美食抽签 🎲</h1>
+  <div class="subtitle">纠结吃啥？让缘分决定！</div>
+  <div class="counter" id="counter">📊 共 220 道菜 · 14 个分类</div>
+</div>
+
+<!-- 分类筛选 -->
+<div class="filter-bar">
+  <div class="filter-label">🎯 选个分类（不选就全抽）</div>
+  <div class="filter-chips" id="chips"></div>
+</div>
+
+<!-- 主显示 -->
+<div class="display" id="display">
+  <div class="display-content" id="displayContent">
+    <div class="placeholder">
       <span class="emoji">🍽️</span>
-      准备好吃啥了吗？
+      <div class="text">准备好吃啥了吗？</div>
+      <div class="hint">点下面"开始"让美食转起来</div>
     </div>
   </div>
+</div>
 
-  <div class="buttons">
-    <button id="startBtn">开始 🎰</button>
-    <button id="stopBtn" disabled>停止 ✋</button>
+<!-- 按钮 -->
+<div class="buttons">
+  <button id="startBtn">开始 🎰</button>
+  <button id="stopBtn" disabled>停止 ✋</button>
+</div>
+<button id="rerollBtn" style="display:none; width:100%; max-width:420px;">换一道 🔄</button>
+
+<!-- 历史记录 -->
+<div class="history">
+  <div class="history-title">📝 最近吃过的</div>
+  <div class="history-list" id="historyList">
+    <span class="history-empty">还没有记录，今天先来一发吧~</span>
   </div>
-
-  <div class="footer">店铺名单可编辑本页面 stores 数组</div>
+</div>
 
 <script>
-  // ===== 杨凌示范区店铺名单 =====
-  // 老爹可自行增删改, 字符串就行
-  const stores = [
-    "老白家面馆",
-    "杨凌蘸水面(老字号)",
-    "马家凉皮",
-    "胖子烤肉拌饭",
-    "鑫源烧烤",
-    "川味轩",
-    "兰州拉面(邰城路)",
-    "杨凌第一家",
-    "老潼关肉夹馍",
-    "袁记肉夹馍",
-    "魏家凉皮",
-    "蜜雪冰城(步行街)",
-    "正新鸡排",
-    "黄焖鸡米饭",
-    "杨凌小吃城",
-    "后稷路边摊",
-    "邰城路夜市烤肉",
-    "马超路串串",
-    "西农大南门小吃街",
-    "康乐食堂"
-  ];
+  // ====== 数据：从外置 JSON 加载（可自行修改 yangling-foods.json 加菜） ======
+  let dishes = {};
+  const FALLBACK_DISHES = {
+    "粉面类": ["蘸水面", "杨凌蘸水面", "凉皮", "酸辣粉", "牛肉拉面"],
+  };
 
-  const display   = document.getElementById('display');
-  const startBtn  = document.getElementById('startBtn');
-  const stopBtn   = document.getElementById('stopBtn');
-  let timer       = null;
-  let isRunning   = false;
+  // 异步加载外置 JSON，失败用内置 fallback
+  async function loadDishes() {
+    try {
+      const resp = await fetch('./yangling-foods.json');
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      dishes = await resp.json();
+      console.log('✅ 已加载菜品数据:', Object.keys(dishes).length, '个分类');
+    } catch (e) {
+      console.warn('⚠️ 外置 JSON 加载失败，用内置数据:', e.message);
+      dishes = FALLBACK_DISHES;
+    }
+  }
 
+  // ====== 工具函数 ======
+  const $ = (s) => document.querySelector(s);
+  const $$ = (s) => document.querySelectorAll(s);
+
+  // 总数和分类（动态算，因为 dishes 是异步加载的）
+  function getStats() {
+    const cats = Object.keys(dishes);
+    const total = Object.values(dishes).reduce((a, b) => a + b.length, 0);
+    return { cats, total };
+  }
+  let CATEGORIES = [];
+
+  // 当前选中的分类（null = 全部分类）
+  let selectedCategory = null;
+
+  // 历史记录
+  let history = [];
+
+  // 渲染分类筛选 chip
+  function renderChips() {
+    const container = $("#chips");
+    const allChip = `<button class="chip active" data-cat="">全部</button>`;
+    const catChips = CATEGORIES.map(cat =>
+      `<button class="chip" data-cat="${cat}">${cat}</button>`
+    ).join('');
+    container.innerHTML = allChip + catChips;
+
+    // 绑定点击
+    container.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        container.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        selectedCategory = chip.dataset.cat || null;
+        // 重置显示
+        if (!isRunning) reset();
+      });
+    });
+  }
+
+  // 获取当前可抽的菜（带分类）
+  function getPool() {
+    const pool = [];
+    if (selectedCategory) {
+      dishes[selectedCategory].forEach(name => {
+        pool.push({ name, category: selectedCategory });
+      });
+    } else {
+      for (const cat in dishes) {
+        dishes[cat].forEach(name => {
+          pool.push({ name, category: cat });
+        });
+      }
+    }
+    return pool;
+  }
+
+  // 随机抽一个
   function pickRandom() {
-    return stores[Math.floor(Math.random() * stores.length)];
+    const pool = getPool();
+    return pool[Math.floor(Math.random() * pool.length)];
   }
 
-  function showName(name, animated=false) {
-    display.innerHTML = `<div class="store-name ${animated ? 'pop' : ''}">${name}</div>`;
+  // 显示
+  function showPick(pick, animated=false) {
+    const content = $("#displayContent");
+    content.innerHTML = `
+      <div class="store-name ${animated ? 'pop' : ''}">${pick.name}</div>
+      <div class="store-category">${pick.category}</div>
+    `;
   }
 
+  // 重置
   function reset() {
-    display.innerHTML = `
-      <div class="placeholder" id="placeholder">
+    $("#display").classList.remove('spinning');
+    $("#displayContent").innerHTML = `
+      <div class="placeholder">
         <span class="emoji">🍽️</span>
-        准备好吃啥了吗？
-      </div>`;
+        <div class="text">准备好吃啥了吗？</div>
+        <div class="hint">${selectedCategory ? '当前分类：' + selectedCategory : '点"开始"让美食转起来'}</div>
+      </div>
+    `;
+    $("#rerollBtn").style.display = 'none';
   }
+
+  // 添加到历史
+  function addHistory(pick) {
+    history.unshift(pick);
+    if (history.length > 8) history = history.slice(0, 8);
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const list = $("#historyList");
+    if (history.length === 0) {
+      list.innerHTML = '<span class="history-empty">还没有记录，今天先来一发吧~</span>';
+      return;
+    }
+    list.innerHTML = history.map(p =>
+      `<span class="history-item">${p.name}</span>`
+    ).join('');
+  }
+
+  // 礼花
+  function burstConfetti() {
+    const colors = ['#ff6b6b', '#feca57', '#48dbfb', '#ff9ff3', '#54a0ff', '#5f27cd', '#00d2d3'];
+    const n = 50;
+    for (let i = 0; i < n; i++) {
+      const c = document.createElement('div');
+      c.className = 'confetti';
+      c.style.background = colors[Math.floor(Math.random() * colors.length)];
+      const angle = (Math.PI * 2 * i) / n;
+      const dist = 200 + Math.random() * 200;
+      c.style.setProperty('--dx', `${Math.cos(angle) * dist}px`);
+      c.style.setProperty('--dy', `${Math.sin(angle) * dist}px`);
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 1300);
+    }
+  }
+
+  // ====== 主逻辑 ======
+  const display = $("#display");
+  const startBtn = $("#startBtn");
+  const stopBtn = $("#stopBtn");
+  const rerollBtn = $("#rerollBtn");
+  let timer = null;
+  let isRunning = false;
+  let lastPick = null;
 
   startBtn.addEventListener('click', () => {
     if (isRunning) return;
     isRunning = true;
     startBtn.disabled = true;
-    stopBtn.disabled  = false;
+    stopBtn.disabled = false;
+    rerollBtn.style.display = 'none';
+    display.classList.add('spinning');
 
     timer = setInterval(() => {
-      showName(pickRandom());
-    }, 80); // 滚动速度
+      const pick = pickRandom();
+      showPick(pick);
+    }, 70);
   });
 
   stopBtn.addEventListener('click', () => {
@@ -193,14 +516,61 @@
     clearInterval(timer);
     isRunning = false;
     startBtn.disabled = false;
-    stopBtn.disabled  = true;
+    stopBtn.disabled = true;
+    display.classList.remove('spinning');
 
     const final = pickRandom();
-    showName(final, true);
+    showPick(final, true);
+    lastPick = final;
+    addHistory(final);
+    rerollBtn.style.display = 'block';
 
-    // 震动反馈 (支持的设备)
-    if (navigator.vibrate) navigator.vibrate(100);
+    if (navigator.vibrate) navigator.vibrate([80, 50, 80]);
+    burstConfetti();
   });
+
+  rerollBtn.addEventListener('click', () => {
+    if (isRunning) return;
+    const pick = pickRandom();
+    showPick(pick, true);
+    lastPick = pick;
+    addHistory(pick);
+    if (navigator.vibrate) navigator.vibrate(60);
+    burstConfetti();
+  });
+
+  // ====== 背景飘落 emoji ======
+  const FOOD_EMOJIS = ['🍜', '🍔', '🍟', '🍢', '🥟', '🍦', '🍰', '🍩', '🥤', '🌮', '🍕', '🍖', '🥩', '🦐', '🦀', '🥟', '🍙', '🍣', '🍱', '🥗'];
+  function startFloating() {
+    const container = $("#emojiContainer");
+    function spawn() {
+      const e = document.createElement('div');
+      e.className = 'floating-emoji';
+      e.textContent = FOOD_EMOJIS[Math.floor(Math.random() * FOOD_EMOJIS.length)];
+      e.style.left = Math.random() * 100 + 'vw';
+      e.style.fontSize = (20 + Math.random() * 20) + 'px';
+      e.style.animationDuration = (12 + Math.random() * 12) + 's';
+      e.style.animationDelay = '0s';
+      container.appendChild(e);
+      setTimeout(() => e.remove(), 24000);
+    }
+    // 初始撒一波
+    for (let i = 0; i < 12; i++) {
+      setTimeout(spawn, i * 600);
+    }
+    setInterval(spawn, 2500);
+  }
+
+  // ====== 初始化（等数据加载完） ======
+  (async () => {
+    await loadDishes();
+    const { cats, total } = getStats();
+    CATEGORIES = cats;
+    renderChips();
+    renderHistory();
+    $("#counter").textContent = `📊 共 ${total} 道菜 · ${cats.length} 个分类`;
+    startFloating();
+  })();
 </script>
 </body>
 </html>
