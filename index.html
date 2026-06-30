@@ -387,14 +387,19 @@
   // 历史记录
   let history = [];
 
-  // 渲染分类筛选 chip
+  // 渲染分类筛选 chip（去重，保留首次出现顺序）
   function renderChips() {
     const container = $("#chips");
     const allChip = `<button class="chip active" data-cat="">全部</button>`;
-    const catChips = CATEGORIES.map(cat =>
-      `<button class="chip" data-cat="${cat}">${cat}</button>`
-    ).join('');
-    container.innerHTML = allChip + catChips;
+    // 去重：第一个"全部"分类用默认 chip 替代，后面的同名分类跳过
+    const seen = new Set(['全部']);
+    const catChips = [];
+    for (const cat of CATEGORIES) {
+      if (seen.has(cat)) continue;
+      seen.add(cat);
+      catChips.push(`<button class="chip" data-cat="${cat}">${cat}</button>`);
+    }
+    container.innerHTML = allChip + catChips.join('');
 
     // 绑定点击
     container.querySelectorAll('.chip').forEach(chip => {
@@ -416,10 +421,14 @@
         pool.push({ name, category: selectedCategory });
       });
     } else {
+      // 不选分类 = 从所有分类里抽（按分类键去重，避免同一条目被多个分类重复计入）
+      const seenNames = new Set();
       for (const cat in dishes) {
-        dishes[cat].forEach(name => {
+        for (const name of dishes[cat]) {
+          if (seenNames.has(name)) continue;
+          seenNames.add(name);
           pool.push({ name, category: cat });
-        });
+        }
       }
     }
     return pool;
